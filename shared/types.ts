@@ -46,3 +46,20 @@ export interface Recommendation {
   recommended_tool?: string;
   steps: string[];
 }
+
+/**
+ * Holds the plain-language process description that a user enters for a team
+ * before the backend converts it into a structured TeamProcess.
+ */
+export interface TeamProcessDescription {
+  team: string;
+  description: string;
+}
+
+/**
+ * Groups the two result lists returned after the complete process analysis.
+ */
+export interface ProcessPipelineResult {
+  findings: Finding[];
+  recommendations: Recommendation[];
+}
