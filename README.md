@@ -1,6 +1,8 @@
 # now2next
 
-A small full-stack TypeScript starter project.
+AI hackathon project: turns team process interviews into an AI implementation plan.
+
+This repository starts with a small full-stack TypeScript application.
 
 ## Folders
 
