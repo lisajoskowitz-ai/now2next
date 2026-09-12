@@ -8,7 +8,7 @@ export interface HealthResponse {
  * controls, timing, and supporting systems.
  */
 export interface TeamProcess {
-  team_name: string;
+  team: string;
   booking_owner: string;
   booking_channel: string;
   approval_timing: string;
