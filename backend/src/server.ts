@@ -8,6 +8,7 @@ import type {
   TeamProcessDescription,
 } from '../../shared/types';
 import { analyzeProcesses } from './services/analyze-processes';
+import { anonymizeText, restoreText } from './services/anymize';
 import { extractTeamProcesses } from './services/extract-team-processes';
 import { generateRecommendations } from './services/generate-recommendations';
 
@@ -24,6 +25,40 @@ app.get('/api/health', (_request, response) => {
   const body: HealthResponse = { message: 'now2next API is running' };
   response.json(body);
 });
+
+async function anonymizeDescriptions(descriptions: TeamProcessDescription[]) {
+  const restoreMap: Record<string, string> = {};
+  const anonymizedDescriptions = await Promise.all(
+    descriptions.map(async (description, index) => {
+      const [anonymizedTeam, anonymizedDescription] = await Promise.all([
+        anonymizeText(description.team),
+        anonymizeText(description.description),
+      ]);
+      Object.assign(restoreMap, anonymizedTeam.restoreMap, anonymizedDescription.restoreMap);
+
+      // Team names are aliases even when Anymize does not classify them as personal data.
+      const teamAlias = `[[TeamRef-${index + 1}]]`;
+      restoreMap[teamAlias] = description.team;
+      return { team: teamAlias, description: anonymizedDescription.anonymized };
+    }),
+  );
+  return { anonymizedDescriptions, restoreMap };
+}
+
+function restoreResult(result: ProcessPipelineResult, restoreMap: object): ProcessPipelineResult {
+  function restoreValue(value: unknown): unknown {
+    if (typeof value === 'string') return restoreText(value, restoreMap);
+    if (Array.isArray(value)) return value.map(restoreValue);
+    if (typeof value === 'object' && value !== null) {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, nestedValue]) => [key, restoreValue(nestedValue)]),
+      );
+    }
+    return value;
+  }
+
+  return restoreValue(result) as ProcessPipelineResult;
+}
 
 app.post('/api/process-pipeline', async (request, response) => {
   const descriptions = request.body?.teams;
@@ -49,11 +84,12 @@ app.post('/api/process-pipeline', async (request, response) => {
   }
 
   try {
-    const processes = await extractTeamProcesses(descriptions);
+    const { anonymizedDescriptions, restoreMap } = await anonymizeDescriptions(descriptions);
+    const processes = await extractTeamProcesses(anonymizedDescriptions);
     const findings = await analyzeProcesses(processes);
     const recommendations = await generateRecommendations(findings);
     const result: ProcessPipelineResult = { findings, recommendations };
-    response.json(result);
+    response.json(restoreResult(result, restoreMap));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to analyze the team processes.';
     response.status(500).json({ message });

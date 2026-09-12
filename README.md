@@ -22,14 +22,20 @@ runner:
 npm install
 ```
 
-### 2. Configure the OpenAI API key
+### 2. Configure API keys
 
-The process-analysis and recommendation services require an API key. Set it in
-your shell before starting the backend; do not commit it to the repository.
+Copy `.env.example` to a file named `.env` in the repository root, then replace
+both placeholders. If `.env` already exists, add the `ANYMIZE_API_KEY` line to
+that file. Do not commit `.env`.
 
-```powershell
-$env:OPENAI_API_KEY = "your_api_key_here"
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+ANYMIZE_API_KEY=your_anymize_api_key_here
 ```
+
+`ANYMIZE_API_KEY` protects the free-text descriptions: the backend sends each
+description to Anymize first, sends only its placeholders to OpenAI, then restores
+the original values only in the response shown to the user.
 
 Optionally choose a model:
 
