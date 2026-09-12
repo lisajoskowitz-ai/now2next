@@ -12,16 +12,11 @@ function isRecommendation(value: unknown): value is Recommendation {
 
   const candidate = value as Record<string, unknown>;
   const hasValidSteps =
-    Array.isArray(candidate.implementation_steps) &&
-    candidate.implementation_steps.length > 0 &&
-    candidate.implementation_steps.every(
-      (step) =>
-        typeof step === 'object' &&
-        step !== null &&
-        !Array.isArray(step) &&
-        Number.isInteger((step as Record<string, unknown>).step_number) &&
-        ((step as Record<string, unknown>).step_number as number) > 0 &&
-        typeof (step as Record<string, unknown>).description === 'string',
+    Array.isArray(candidate.steps) &&
+    candidate.steps.length > 0 &&
+    candidate.steps.every(
+      (step, index) =>
+        typeof step === 'string' && step.startsWith(`${index + 1}. `),
     );
 
   if (
@@ -35,12 +30,11 @@ function isRecommendation(value: unknown): value is Recommendation {
   if (candidate.fix_type === 'ai') {
     return (
       typeof candidate.recommended_tool === 'string' &&
-      validAiTools.has(candidate.recommended_tool) &&
-      typeof candidate.reasoning === 'string'
+      validAiTools.has(candidate.recommended_tool)
     );
   }
 
-  return candidate.recommended_tool === undefined && candidate.reasoning === undefined;
+  return candidate.recommended_tool === undefined;
 }
 
 function parseRecommendations(
@@ -61,7 +55,7 @@ function parseRecommendations(
     !parsed.every(
       (recommendation, index) =>
         isRecommendation(recommendation) &&
-        recommendation.finding_reference === findings[index].description,
+        recommendation.finding_reference === findings[index].reasoning,
     )
   ) {
     throw new Error('The recommendation model returned data outside the Recommendation schema.');

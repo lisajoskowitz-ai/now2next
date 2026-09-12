@@ -11,18 +11,20 @@ redundancy, and fragmentation by comparing processes across teams.
 Return only a valid JSON array of Finding objects. Do not return Markdown,
 explanations, or any text outside the JSON array. Every Finding must contain
 exactly these fields:
-- status: "working" or "gap"
+- area: "policy_check", "approval_redundancy", "submission_timeliness",
+  "audit_trail", or "company_consistency"
+- rating: "works" or "gap"
 - severity: "tolerate", "todo", or "possible_showstopper"
-- description: a concise explanation of the evidence and impact
 - teams_involved: an array of affected team names
+- reasoning: a concise explanation of the evidence and impact
 
 Classification rules, in descending priority:
 1. A fast process is NOT automatically working. If a process skips a
-   policy/compliance check, return a finding with status "gap" and severity
+   policy/compliance check, return a finding with rating "gap" and severity
    "possible_showstopper", regardless of its speed, automation, or approval
    count.
 2. A redundant step, such as a duplicate approval after a valid pre-approval,
-   that does not skip compliance is a "gap" with severity "todo". Do not call
+   that does not skip compliance has rating "gap" and severity "todo". Do not call
    it a showstopper.
 3. Differences that do not affect compliance or major efficiency are
    "tolerate" findings.
@@ -31,9 +33,9 @@ Classification rules, in descending priority:
    process flows that create a major efficiency or control problem.
 
 For the supplied test scenario, you must produce these findings:
-- Sales auto-approval without a policy/compliance check is a "gap" with
+- Sales auto-approval without a policy/compliance check has rating "gap" with
   severity "possible_showstopper" because it is a compliance risk.
-- Finance/Controlling's second approval after pre-approval is a "gap" with
+- Finance/Controlling's second approval after pre-approval has rating "gap" with
   severity "todo" because it is redundant but compliant.
 - The fragmented processes across Sales, Finance/Controlling, and Operations
   are a finding involving all three teams.

@@ -4,47 +4,45 @@ export interface HealthResponse {
 }
 
 /**
- * Describes how one team currently runs a process, from submitting an expense
- * through approval and completion.
+ * Describes how a team books, approves, and submits expenses, including its
+ * controls, timing, and supporting systems.
  */
 export interface TeamProcess {
   team_name: string;
-  process_owner: string;
-  booking_approval_channel: string;
+  booking_owner: string;
+  booking_channel: string;
+  approval_timing: string;
   approval_steps: number;
-  has_policy_compliance_check: boolean;
-  expense_submission_method: string;
-  processing_time: string;
+  policy_check: string;
+  expense_submission: string;
+  processing_time_days: string;
   systems_used: string[];
 }
 
 /**
- * Records whether an observed part of a process works or has a gap, how urgent
- * that gap is, and the teams affected by it.
+ * Captures an assessment of one process area, including the affected teams,
+ * whether it works or has a gap, and the evidence behind that assessment.
  */
 export interface Finding {
-  status: 'working' | 'gap';
-  severity: 'tolerate' | 'todo' | 'possible_showstopper';
-  description: string;
+  area:
+    | 'policy_check'
+    | 'approval_redundancy'
+    | 'submission_timeliness'
+    | 'audit_trail'
+    | 'company_consistency';
   teams_involved: string[];
+  rating: 'works' | 'gap';
+  severity: 'tolerate' | 'todo' | 'possible_showstopper';
+  reasoning: string;
 }
 
 /**
- * Represents one numbered action needed to put a recommendation into practice.
- */
-export interface ImplementationStep {
-  step_number: number;
-  description: string;
-}
-
-/**
- * Links a proposed solution to a finding. AI recommendations include the tool
- * to use and why; non-AI recommendations leave those optional fields empty.
+ * Links a proposed fix to a finding. The ordered strings in steps form a
+ * numbered implementation plan; an AI tool is included only when it is needed.
  */
 export interface Recommendation {
   finding_reference: string;
   fix_type: 'ai' | 'non_ai';
   recommended_tool?: string;
-  reasoning?: string;
-  implementation_steps: ImplementationStep[];
+  steps: string[];
 }

@@ -11,14 +11,13 @@ only when AI genuinely adds value. Do not default to AI.
 
 Return only a valid JSON array. Do not include Markdown, explanations, or text
 outside the JSON. Each object must match this Recommendation shape:
-- finding_reference: copy the input finding's description exactly
+- finding_reference: copy the input finding's reasoning exactly
 - fix_type: "ai" or "non_ai"
 - recommended_tool: required only for an AI recommendation
-- reasoning: required only for an AI recommendation
-- implementation_steps: a short array of objects, each with a positive integer
-  step_number and a concise string description
+- steps: a short array of strings, each starting with its positive step number
+  such as "1. Define the policy"
 
-For fix_type "non_ai", omit recommended_tool and reasoning. Recommend a clear
+For fix_type "non_ai", omit recommended_tool. Recommend a clear
 process, policy, control, ownership, or training change instead.
 
 For fix_type "ai", recommended_tool must be exactly one option from this
@@ -27,4 +26,4 @@ curated list, and must fit the finding:
 - "OCR/LLM-based receipt digitization" for receipt digitization
 
 Every recommendation must end with a short numbered implementation plan in
-implementation_steps. Use only information supported by the input findings.`;
+steps. Use only information supported by the input findings.`;

@@ -2,7 +2,14 @@ import OpenAI from 'openai';
 import type { Finding, TeamProcess } from '../../../shared/types';
 import { PROCESS_ANALYSIS_SYSTEM_PROMPT } from '../prompts/process-analysis';
 
-const validStatuses = new Set<Finding['status']>(['working', 'gap']);
+const validAreas = new Set<Finding['area']>([
+  'policy_check',
+  'approval_redundancy',
+  'submission_timeliness',
+  'audit_trail',
+  'company_consistency',
+]);
+const validRatings = new Set<Finding['rating']>(['works', 'gap']);
 const validSeverities = new Set<Finding['severity']>([
   'tolerate',
   'todo',
@@ -16,9 +23,10 @@ function isFinding(value: unknown): value is Finding {
 
   const candidate = value as Record<string, unknown>;
   return (
-    validStatuses.has(candidate.status as Finding['status']) &&
+    validAreas.has(candidate.area as Finding['area']) &&
+    validRatings.has(candidate.rating as Finding['rating']) &&
     validSeverities.has(candidate.severity as Finding['severity']) &&
-    typeof candidate.description === 'string' &&
+    typeof candidate.reasoning === 'string' &&
     Array.isArray(candidate.teams_involved) &&
     candidate.teams_involved.every((team) => typeof team === 'string')
   );
