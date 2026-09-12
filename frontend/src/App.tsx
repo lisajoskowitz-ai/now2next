@@ -7,6 +7,7 @@ import type {
 } from '../../shared/types';
 
 const emptyTeam = (): TeamProcessDescription => ({ team: '', description: '' });
+const demoNames = ['Max Mustermann', 'Anna Schmidt', 'John Doe', 'Jane Doe', 'Maria Garcia'];
 
 const severityStyles: Record<Finding['severity'], string> = {
   possible_showstopper: 'bg-rose-100 text-rose-800 ring-rose-200',
@@ -22,11 +23,35 @@ function relatedFinding(recommendation: Recommendation, findings: Finding[]) {
   return findings.find((finding) => finding.reasoning === recommendation.finding_reference);
 }
 
+function replaceEvery(text: string, search: string, replacement: string) {
+  return text.split(search).join(replacement);
+}
+
+/** A visual-only demonstration; it does not replace the backend privacy controls. */
+function createDemoAnonymizedPreview(teams: TeamProcessDescription[]): TeamProcessDescription[] {
+  return teams.map((team, index) => {
+    let description = team.description;
+
+    teams.forEach((otherTeam, teamIndex) => {
+      description = replaceEvery(description, otherTeam.team, `[Team ${String.fromCharCode(65 + teamIndex)}]`);
+    });
+    demoNames.forEach((name, nameIndex) => {
+      description = replaceEvery(description, name, `[Person ${String.fromCharCode(65 + nameIndex)}]`);
+    });
+    description = description.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[Email]');
+    description = description.replace(/\+?\d[\d\s()/.-]{7,}\d/g, '[Phone]');
+
+    return { team: `[Team ${String.fromCharCode(65 + index)}]`, description };
+  });
+}
+
 function App() {
   const [teams, setTeams] = useState<TeamProcessDescription[]>([emptyTeam()]);
   const [result, setResult] = useState<ProcessPipelineResult | null>(null);
+  const [anonymizedPreview, setAnonymizedPreview] = useState<TeamProcessDescription[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnonymizing, setIsAnonymizing] = useState(false);
 
   function updateTeam(index: number, field: keyof TeamProcessDescription, value: string) {
     setTeams((current) => current.map((team, teamIndex) => teamIndex === index ? { ...team, [field]: value } : team));
@@ -36,12 +61,18 @@ function App() {
     event.preventDefault();
     setError(null);
     setResult(null);
+    setAnonymizedPreview(null);
 
     if (teams.some((team) => !team.team.trim() || !team.description.trim())) {
       setError('Add a team name and a process description for every team before analyzing.');
       return;
     }
 
+    setIsAnonymizing(true);
+    setAnonymizedPreview(createDemoAnonymizedPreview(teams));
+
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    setIsAnonymizing(false);
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/process-pipeline', {
@@ -56,6 +87,7 @@ function App() {
       setError(requestError instanceof Error ? requestError.message : 'The analysis could not be completed.');
     } finally {
       setIsSubmitting(false);
+      setIsAnonymizing(false);
     }
   }
 
@@ -100,11 +132,32 @@ function App() {
             ))}
 
             {error && <p role="alert" className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p>}
-            <button type="submit" disabled={isSubmitting} className="rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400">
-              {isSubmitting ? 'Analyzing all teams…' : 'Analyze processes'}
+            <button type="submit" disabled={isSubmitting || isAnonymizing} className="rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400">
+              {isAnonymizing ? 'Anonymizing input…' : isSubmitting ? 'Analyzing all teams…' : 'Analyze processes'}
             </button>
           </form>
         </section>
+
+        {anonymizedPreview && (
+          <section className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm sm:p-6" aria-live="polite">
+            <div className="flex items-center gap-3">
+              {isAnonymizing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-700 border-t-transparent" aria-hidden="true" />}
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-800">Privacy preview</p>
+                <h2 className="mt-1 text-lg font-bold text-slate-900">{isAnonymizing ? 'Anonymizing input…' : 'Anonymized input preview'}</h2>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-700">This visual demo replaces common names, entered team names, email addresses, and phone numbers with placeholders before analysis begins.</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {anonymizedPreview.map((team) => (
+                <article key={team.team} className="rounded-xl border border-cyan-100 bg-white p-4">
+                  <h3 className="font-semibold text-slate-900">{team.team}</h3>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{team.description}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         {result && (
           <section className="mt-8 space-y-8" aria-live="polite">
