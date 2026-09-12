@@ -3,7 +3,6 @@ import type { Finding, Recommendation } from '../../../shared/types';
 import { RECOMMENDATIONS_SYSTEM_PROMPT } from '../prompts/recommendations';
 
 const validFixTypes = new Set<Recommendation['fix_type']>(['ai', 'non_ai']);
-const validAiTools = new Set(['n8n', 'OCR/LLM-based receipt digitization']);
 
 function isRecommendation(value: unknown): value is Recommendation {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -13,7 +12,8 @@ function isRecommendation(value: unknown): value is Recommendation {
   const candidate = value as Record<string, unknown>;
   const hasValidSteps =
     Array.isArray(candidate.steps) &&
-    candidate.steps.length > 0 &&
+    candidate.steps.length >= 3 &&
+    candidate.steps.length <= 4 &&
     candidate.steps.every(
       (step, index) =>
         typeof step === 'string' && step.startsWith(`${index + 1}. `),
@@ -28,10 +28,7 @@ function isRecommendation(value: unknown): value is Recommendation {
   }
 
   if (candidate.fix_type === 'ai') {
-    return (
-      typeof candidate.recommended_tool === 'string' &&
-      validAiTools.has(candidate.recommended_tool)
-    );
+    return typeof candidate.recommended_tool === 'string' && candidate.recommended_tool.length > 0;
   }
 
   return candidate.recommended_tool === undefined;
@@ -51,11 +48,12 @@ function parseRecommendations(
 
   if (
     !Array.isArray(parsed) ||
-    parsed.length !== findings.length ||
-    !parsed.every(
-      (recommendation, index) =>
-        isRecommendation(recommendation) &&
-        recommendation.finding_reference === findings[index].reasoning,
+    !parsed.every(isRecommendation) ||
+    !parsed.every((recommendation) =>
+      findings.some((finding) => finding.reasoning === recommendation.finding_reference),
+    ) ||
+    !findings.every((finding) =>
+      parsed.some((recommendation) => recommendation.finding_reference === finding.reasoning),
     )
   ) {
     throw new Error('The recommendation model returned data outside the Recommendation schema.');
