@@ -1,4 +1,5 @@
 name: Deploy frontend to GitHub Pages
+# This workflow publishes the Vite build from frontend/dist, not the README.
 
 on:
   push:
