@@ -34,7 +34,7 @@ ANYMIZE_API_KEY=your_anymize_api_key_here
 ```
 
 `ANYMIZE_API_KEY` protects the free-text descriptions: the backend sends each
-description to Anymize first, sends only its placeholders to OpenAI, then restores
+description to [anymize](https://anymize.ai/) first, sends only its placeholders to OpenAI, then restores
 the original values only in the response shown to the user.
 
 Optionally choose a model:

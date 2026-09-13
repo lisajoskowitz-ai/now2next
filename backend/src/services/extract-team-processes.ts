@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import type { TeamProcess, TeamProcessDescription } from '../../../shared/types';
 import { PROCESS_EXTRACTION_SYSTEM_PROMPT } from '../prompts/process-extraction';
 
-function isTeamProcess(value: unknown): value is TeamProcess {
+export function isTeamProcess(value: unknown): value is TeamProcess {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
 
   const candidate = value as Record<string, unknown>;

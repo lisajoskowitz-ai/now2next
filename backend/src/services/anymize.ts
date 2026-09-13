@@ -1,6 +1,7 @@
 const ANYMIZE_API_BASE_URL = 'https://app.anymize.ai/api';
 const POLL_INTERVAL_MS = 500;
 const MAX_POLL_ATTEMPTS = 40;
+const NETWORK_RETRY_ATTEMPTS = 3;
 
 type AnymizeJob = {
   job_id?: unknown;
@@ -23,23 +24,35 @@ function getApiKey(): string {
 }
 
 async function requestAnymize(path: string, options: RequestInit): Promise<unknown> {
-  const response = await fetch(`${ANYMIZE_API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${getApiKey()}`,
-      ...options.headers,
-    },
-  });
+  let response: Response;
 
-  const body: unknown = await response.json().catch(() => undefined);
-  if (!response.ok) {
-    const message =
-      typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
-        ? body.error
-        : `Anymize request failed with status ${response.status}.`;
-    throw new Error(message);
+  for (let attempt = 0; attempt < NETWORK_RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      response = await fetch(`${ANYMIZE_API_BASE_URL}${path}`, {
+        ...options,
+        headers: {
+          Authorization: `Bearer ${getApiKey()}`,
+          ...options.headers,
+        },
+      });
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) {
+        const message =
+          typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
+            ? body.error
+            : `Anymize request failed with status ${response.status}.`;
+        throw new Error(message);
+      }
+      return body;
+    } catch (error) {
+      if (error instanceof Error && !error.message.includes('fetch failed')) throw error;
+      if (attempt < NETWORK_RETRY_ATTEMPTS - 1) {
+        await wait(400 * (attempt + 1));
+      }
+    }
   }
-  return body;
+
+  throw new Error('Could not reach Anymize after several attempts. Check the network connection and restart the backend.');
 }
 
 function wait(milliseconds: number): Promise<void> {

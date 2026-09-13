@@ -15,6 +15,11 @@ const validSeverities = new Set<Finding['severity']>([
   'todo',
   'possible_showstopper',
 ]);
+const validConfidence = new Set<Finding['confidence']>([
+  'confirmed',
+  'inferred',
+  'needs_validation',
+]);
 
 function isFinding(value: unknown): value is Finding {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -27,6 +32,12 @@ function isFinding(value: unknown): value is Finding {
     validRatings.has(candidate.rating as Finding['rating']) &&
     validSeverities.has(candidate.severity as Finding['severity']) &&
     typeof candidate.reasoning === 'string' &&
+    Array.isArray(candidate.evidence) &&
+    candidate.evidence.length > 0 &&
+    candidate.evidence.every((item) => typeof item === 'string') &&
+    validConfidence.has(candidate.confidence as Finding['confidence']) &&
+    Array.isArray(candidate.open_questions) &&
+    candidate.open_questions.every((item) => typeof item === 'string') &&
     Array.isArray(candidate.teams_involved) &&
     candidate.teams_involved.every((team) => typeof team === 'string')
   );

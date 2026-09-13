@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "set \"NODE_USE_SYSTEM_CA=1\" && set \"NODE_OPTIONS=--use-system-ca\" && tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/backend/src/server.js"
+    "start": "set \"NODE_USE_SYSTEM_CA=1\" && set \"NODE_OPTIONS=--use-system-ca\" && node dist/backend/src/server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

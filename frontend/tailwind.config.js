@@ -4,16 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: '#1A1A2E',
-        muted: '#5A5A72',
-        violet: '#7C5CFC',
-        coral: '#FF6B9D',
-        sky: '#4FD1E8',
-        canvas: '#FAFAFC',
+        ink: '#143456',
+        muted: '#5C6D80',
+        violet: '#6D64B8',
+        coral: '#A96E94',
+        sky: '#5DB7B0',
+        canvas: '#F7F9FB',
       },
       boxShadow: {
-        surface: '0 18px 45px rgba(57, 45, 111, 0.10)',
-        button: '0 12px 25px rgba(124, 92, 252, 0.25)',
+        surface: '0 12px 32px rgba(20, 52, 86, 0.08)',
+        button: '0 8px 18px rgba(31, 62, 116, 0.20)',
       },
     },
   },

@@ -19,6 +19,11 @@ these fields:
 - rating: "works" or "gap"
 - severity: "tolerate", "todo", or "possible_showstopper"
 - reasoning: a concise explanation of evidence, root cause, and impact
+- evidence: 1–3 short direct excerpts or careful paraphrases from the input
+- confidence: "confirmed" only for direct evidence; "inferred" for a supported
+  conclusion; "needs_validation" when the input is ambiguous or incomplete
+- open_questions: an empty array when no validation is needed; otherwise 1–3
+  precise questions that a process owner must answer
 
 Rules, in this priority order:
 1. A missing policy check before payout is ALWAYS a finding with rating "gap"
@@ -34,6 +39,12 @@ Rules, in this priority order:
    "company_consistency", rating "gap", and severity "todo".
 5. Do not infer evidence not present in the input. Use rating "works" only
    when the supported process genuinely works for the area.
+6. Always distinguish evidence strength. For example, if the input does not
+   document an approval record, say "approval record is not evidenced" with
+   confidence "needs_validation"; never claim "zero approvals".
+7. Include at least one positive pattern as a "works" finding when the input
+   supports it, such as digital receipt capture or an evidenced policy check.
+   Explain what should be retained in the future target process.
 
 For the supplied Sales, Finance/Controlling, and Operations test data, include
 at least these findings:
